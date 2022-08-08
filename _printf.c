@@ -1,4 +1,10 @@
+<<<<<<< HEAD:_printf.c
 #include "main"
+=======
+#include "main.h"
+
+
+>>>>>>> ec190b641f4453280f9f5adb9aac28f96cc75f15:_printf
 
 void cleanup(va_list args, buffer_t *output);
 int run_printf(const char *format, va_list args, buffer_t *output);
