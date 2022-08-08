@@ -1,10 +1,4 @@
-<<<<<<< HEAD:_printf.c
-#include "main"
-=======
 #include "main.h"
-
-
->>>>>>> ec190b641f4453280f9f5adb9aac28f96cc75f15:_printf
 
 void cleanup(va_list args, buffer_t *output);
 int run_printf(const char *format, va_list args, buffer_t *output);
@@ -37,7 +31,7 @@ int run_printf(const char *format, va_list args, buffer_t *output)
 	char tmp;
 	unsigned char flags, len;
 	unsigned int (*f)(va_list, buffer_t *,
-			unsigned char, unsigned char);
+			unsigned char, int, int, unsigned char);
 
 	for (i = 0; *(format + i); i++)
 	{
