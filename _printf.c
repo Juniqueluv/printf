@@ -9,7 +9,6 @@ int _printf(const char *format, ...);
  * @args: A va_list of arguments provided to _printf.
  * @output: A buffer_t struct.
  */
-
 void cleanup(va_list args, buffer_t *output)
 {
 	va_end(args);
@@ -64,7 +63,6 @@ int run_printf(const char *format, va_list args, buffer_t *output)
 	cleanup(args, output);
 	return (ret);
 }
-
 
 /**
  * _printf - Outputs a formatted string.
