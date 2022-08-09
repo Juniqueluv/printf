@@ -1,82 +1,90 @@
 #include "main.h"
-#include <stdarg.h>
-#include <stdint.h>
+
+void cleanup(va_list args, buffer_t *output);
+int run_printf(const char *format, va_list args, buffer_t *output);
+int _printf(const char *format, ...);
 
 /**
- * _printf - function to print output to the console
- * @format: pointer to the list of arguemant passed to the function
- *
- * Return: bytes of element printed out, -1 on error
+ * cleanup - Peforms cleanup operations for _printf.
+ * @args: A va_list of arguments provided to _printf.
+ * @output: A buffer_t struct.
  */
-
-
-
-int _printf(const char *format, ...)
+void cleanup(va_list args, buffer_t *output)
 {
-	int returnValue, val;
-	va_list args;
-
-	va_start(args, format);
-	if (format == NULL)
-		return (-1);
-	if (format[0] == '%' && _strlen(format) == 1)
-		return (-1);
-	val = _vprintf(format, args);
 	va_end(args);
-
-	(returnValue) = val;
-	return (returnValue);
+	write(1, output->start, output->len);
+	free_buffer(output);
 }
 
 /**
- * _vprintf - helper function for printf, takes the arguement passed to printf,
- *				and does the actual printing
- * @format: pointer to the list of arguement passed to printf to be printd
- * @args: place holder for the arguement passed of type va_list
+ * run_printf - Reads through the format string for _printf.
+ * @format: Character string to print - may contain directives.
+ * @output: A buffer_t struct containing a buffer.
+ * @args: A va_list of arguments.
  *
- * Return: bytes of element printed, -1 if no parameter is supplied
+ * Return: The number of characters stored to output.
  */
-
-int _vprintf(const char *format, va_list args)
+int run_printf(const char *format, va_list args, buffer_t *output)
 {
-	int state = 0, flag[6] = {0, 0, 0, 0, 0, 0}, is_long = 0, is_short = 0,
-	    count = 0, print_count = 0, identifier_printed, reset = 1,
-	    tmp_count, short_long = 0;
+	int i, wid, prec, ret = 0;
+	char tmp;
+	unsigned char flags, len;
+	unsigned int (*f)(va_list, buffer_t *,
+			unsigned char, int, int, unsigned char);
 
-	while (format[count])
+	for (i = 0; *(format + i); i++)
 	{
-		if (state == 0)
+		len = 0;
+		if (*(format + i) == '%')
 		{
-			if (format[count] == '%')
-				state = 1;
-			else
+			tmp = 0;
+			flags = handle_flags(format + i + 1, &tmp);
+			wid = handle_width(args, format + i + tmp + 1, &tmp);
+			prec = handle_precision(args, format + i + tmp + 1,
+					&tmp);
+			len = handle_length(format + i + tmp + 1, &tmp);
+
+			f = handle_specifiers(format + i + tmp + 1);
+			if (f != NULL)
 			{
-				print_count += _putchar(format[count]);
+				i += tmp + 1;
+				ret += f(args, output, flags, wid, prec, len);
+				continue;
 			}
-			count++;
+			else if (*(format + i + tmp + 1) == '\0')
+			{
+				ret = -1;
+				break;
+			}
 		}
-		else
-		{
-			if (isAlpha(format[count]) || format[count] == '%')
-			{
-				identifier_printed = format_specifier(count, format, args,
-						&reset, &is_long, &is_short, &short_long, flag);
-				if (reset == 1)
-				{
-					state = is_long = is_short = short_long = 0;
-				}
-				else
-					reset = 1;
-				count++;
-			}
-			else
-			{
-				tmp_count = setFlags(format, flag, count, args);
-				count += tmp_count;
-			}
-			print_count += identifier_printed;
-		}
+		ret += _memcpy(output, (format + i), 1);
+		i += (len != 0) ? 1 : 0;
 	}
-	va_end(args);
-	return (print_count);
+	cleanup(args, output);
+	return (ret);
+}
+
+/**
+ * _printf - Outputs a formatted string.
+ * @format: Character string to print - may contain directives.
+ *
+ * Return: The number of characters printed.
+ */
+int _printf(const char *format, ...)
+{
+	buffer_t *output;
+	va_list args;
+	int ret;
+
+	if (format == NULL)
+		return (-1);
+	output = init_buffer();
+	if (output == NULL)
+		return (-1);
+
+	va_start(args, format);
+
+	ret = run_printf(format, args, output);
+
+	return (ret);
 }
